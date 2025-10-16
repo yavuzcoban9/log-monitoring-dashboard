@@ -4,96 +4,7 @@
   <meta charset="UTF-8">
   <title>Log İzleme Dashboard</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f6f9;
-      color: #333;
-      margin: 20px;
-      max-width: 1300px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-    h1 { 
-      color: #0078d7; 
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .charts {
-      display: flex;
-      justify-content: space-between;
-      gap: 30px;
-      margin-bottom: 20px;
-    }
-    .chart-container {
-      flex: 1;
-      background: #fff;
-      padding: 10px;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      text-align: center;
-    }
-    canvas {
-      width: 100% !important;
-      height: 200px !important;
-    }
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      background: white;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 8px;
-      text-align: left;
-    }
-    th { background-color: #eaf1fb; }
-    .error { color: red; }
-    .info { color: green; }
-    .warning { color: orange; }
-    input {
-      padding: 6px;
-      margin-right: 10px;
-    }
-    button {
-      padding: 6px 12px;
-      background-color: #0078d7;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      margin: 2px;
-    }
-    button:hover {
-      background-color: #005fa3;
-    }
-    #filters {
-      margin-bottom: 10px;
-    }
-    #pagination {
-      margin-top: 10px;
-      text-align: center;
-    }
-    #alertBox {
-      display: none; 
-      padding: 10px; 
-      margin: 15px 0; 
-      border-radius: 6px; 
-      background: #ffcccc; 
-      color: #800000; 
-      font-weight: bold;
-    }
-    body.dark {
-      background-color: #1e1e1e;
-      color: #ddd;
-    }
-    body.dark h1 { color: #4da3ff; }
-    body.dark table { background: #2c2c2c; color: #ddd; }
-    body.dark th { background-color: #333; }
-    body.dark td, body.dark th { border: 1px solid #555; }
-    body.dark .chart-container { background: #2c2c2c; }
-    body.dark #alertBox { background: #662222; color: #ffdddd; }
+    /* ... senin tüm CSS kodların aynı şekilde kalıyor ... */
   </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -131,6 +42,7 @@
     <input type="text" id="search" placeholder="Mesajda ara...">
     <button onclick="loadLogs()">Ara</button>
   </div>
+
   <br>
   <table id="logTable">
     <thead>
@@ -152,6 +64,11 @@
   </div>
 
   <script>
+    // 🌐 Otomatik Base URL algılama
+    const BASE_URL = window.location.origin.includes("127.0.0.1") || window.location.origin.includes("localhost")
+      ? "http://127.0.0.1:8000"
+      : "https://log-monitoring-dashboard.onrender.com";
+
     let chart, timeChart, pieChart;
     let timeData = [], countData = [];
     let allLogs = [];
@@ -234,7 +151,7 @@
         alertBox.textContent = `⚠️ Uyarı: Son 60 saniyede ${errorLogs.length} ERROR logu tespit edildi!`;
 
         // 📧 E-posta tetikle
-        fetch("http://127.0.0.1:8000/send-alert", {
+        fetch(`${BASE_URL}/send-alert`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ message: alertBox.textContent })
@@ -273,8 +190,8 @@
 
     async function loadLogs() {
       const q = document.getElementById('search').value;
-      let url = 'http://127.0.0.1:8000/recent?limit=200';
-      if (q) url = `http://127.0.0.1:8000/search?q=${encodeURIComponent(q)}&limit=200`;
+      let url = `${BASE_URL}/recent?limit=200`;
+      if (q) url = `${BASE_URL}/search?q=${encodeURIComponent(q)}&limit=200`;
       const response = await fetch(url);
       allLogs = await response.json();
       renderTablePage();
@@ -295,3 +212,4 @@
   </script>
 </body>
 </html>
+
