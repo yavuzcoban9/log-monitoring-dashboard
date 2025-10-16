@@ -76,25 +76,6 @@ Search logs:
 
 curl "http://127.0.0.1:8000/search?q=error"
 
-Deployment (Render)
-
-Push this repository to GitHub.
-
-Create a new Web Service on Render.com
-
-
-Connect your GitHub repo.
-
-Set the Start Command:
-
-uvicorn app:app --host 0.0.0.0 --port 10000
-
-
-Add Mailtrap credentials under “Environment Variables”.
-
-Your live demo URL will look like:
-
-https://log-monitoring-dashboard.onrender.com/dashboard
 
 Author
 
