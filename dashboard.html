@@ -9,19 +9,59 @@
       background-color: #f5f7fb;
       color: #333;
       margin: 0;
-      padding: 20px;
+      padding: 80px 20px 20px;
       max-width: 1300px;
       margin-left: auto;
       margin-right: auto;
+      transition: background 0.3s, color 0.3s;
     }
 
-    h1 {
-      color: #0078d7;
+    /* 🔹 Üst Menü */
+    header {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      background: #0078d7;
+      color: white;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 20px;
+      padding: 12px 40px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      z-index: 1000;
     }
+
+    header h1 {
+      margin: 0;
+      font-size: 22px;
+    }
+
+    nav a, nav button {
+      color: white;
+      text-decoration: none;
+      margin-left: 20px;
+      font-weight: bold;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 15px;
+    }
+
+    nav a.active {
+      text-decoration: underline;
+      color: #ffee99;
+    }
+
+    nav a:hover, nav button:hover {
+      text-decoration: underline;
+    }
+
+    /* 🌙 Dark Mode */
+    body.dark { background-color: #1e1e1e; color: #ddd; }
+    body.dark header { background-color: #111; }
+    body.dark table { background: #2c2c2c; color: #ddd; }
+    body.dark th { background-color: #333; }
+    body.dark td, body.dark th { border: 1px solid #555; }
 
     .charts {
       display: flex;
@@ -41,10 +81,7 @@
       text-align: center;
     }
 
-    canvas {
-      width: 100% !important;
-      height: 220px !important;
-    }
+    canvas { width: 100% !important; height: 220px !important; }
 
     table {
       border-collapse: collapse;
@@ -62,42 +99,7 @@
       font-size: 14px;
     }
 
-    th {
-      background-color: #eaf1fb;
-    }
-
-    .error { color: red; }
-    .info { color: green; }
-    .warning { color: orange; }
-
-    input {
-      padding: 6px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      margin-right: 10px;
-    }
-
-    button {
-      padding: 6px 12px;
-      background-color: #0078d7;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: #005fa3;
-    }
-
-    #filters {
-      margin-bottom: 10px;
-    }
-
-    #pagination {
-      margin-top: 15px;
-      text-align: center;
-    }
+    th { background-color: #eaf1fb; }
 
     #alertBox {
       display: none;
@@ -110,204 +112,159 @@
       text-align: center;
     }
 
-    /* 🌙 Dark Mode */
-    body.dark {
-      background-color: #1e1e1e;
-      color: #ddd;
+    /* ⚙️ Ayarlar Paneli */
+    #settingsPanel {
+      display: none;
+      background: white;
+      border-radius: 8px;
+      padding: 15px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 25px;
+      transition: all 0.3s ease;
     }
-    body.dark h1 { color: #4da3ff; }
-    body.dark table { background: #2c2c2c; color: #ddd; }
-    body.dark th { background-color: #333; }
-    body.dark td, body.dark th { border: 1px solid #555; }
-    body.dark .chart-container { background: #2c2c2c; }
-    body.dark #alertBox { background: #662222; color: #ffdddd; }
+
+    #settingsPanel label { display: block; margin-top: 10px; }
+    #settingsPanel input {
+      padding: 5px; margin-top: 4px; border-radius: 4px; border: 1px solid #ccc;
+    }
+    #settingsPanel button {
+      margin-top: 10px; padding: 6px 12px; border: none; background: #0078d7; color: white; border-radius: 4px; cursor: pointer;
+    }
 
   </style>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
-  <h1>
-    🧠 Log İzleme Dashboard
-    <button id="themeToggle">🌙 Dark Mode</button>
-  </h1>
+  <header>
+    <h1>🧠 Log Dashboard</h1>
+    <nav>
+      <a href="#" id="navDashboard" class="active" onclick="showSection('dashboard')">Dashboard</a>
+      <a href="/docs" target="_blank" id="navDocs">API Docs</a>
+      <a href="#" id="navSettings" onclick="showSection('settings')">Ayarlar</a>
+      <button id="themeToggle">🌙 Tema</button>
+    </nav>
+  </header>
 
   <div id="alertBox">⚠️ Uyarı: Çok fazla hata logu tespit edildi!</div>
 
-  <div class="charts">
-    <div class="chart-container">
-      <h2>Log Seviyesi Dağılımı</h2>
-      <canvas id="logChart"></canvas>
-    </div>
-    <div class="chart-container">
-      <h2>Zaman Serisi</h2>
-      <canvas id="timeChart"></canvas>
-    </div>
-    <div class="chart-container">
-      <h2>Log Oranları</h2>
-      <canvas id="pieChart"></canvas>
-    </div>
+  <!-- ⚙️ Ayarlar Bölümü -->
+  <div id="settingsPanel">
+    <h2>⚙️ Sistem Ayarları</h2>
+    <label>E-posta Uyarı Eşiği:</label>
+    <input type="number" id="errorThreshold" value="3" min="1">
+
+    <label>Yenileme Aralığı (saniye):</label>
+    <input type="number" id="refreshInterval" value="10" min="5">
+
+    <button onclick="saveSettings()">Kaydet</button>
   </div>
 
-  <div id="filters">
-    <button onclick="setFilter('ALL')">Tümünü Göster</button>
-    <button onclick="setFilter('INFO')">INFO</button>
-    <button onclick="setFilter('WARNING')">WARNING</button>
-    <button onclick="setFilter('ERROR')">ERROR</button>
-  </div>
+  <!-- 📊 Dashboard Ana Bölümü -->
+  <div id="dashboardSection">
+    <div class="charts">
+      <div class="chart-container">
+        <h2>Log Seviyesi Dağılımı</h2>
+        <canvas id="logChart"></canvas>
+      </div>
+      <div class="chart-container">
+        <h2>Zaman Serisi</h2>
+        <canvas id="timeChart"></canvas>
+      </div>
+      <div class="chart-container">
+        <h2>Log Oranları</h2>
+        <canvas id="pieChart"></canvas>
+      </div>
+    </div>
 
-  <div>
-    <input type="text" id="search" placeholder="Mesajda ara...">
-    <button onclick="loadLogs()">Ara</button>
-  </div>
-
-  <br>
-
-  <table id="logTable">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Zaman</th>
-        <th>Kaynak</th>
-        <th>Seviye</th>
-        <th>Mesaj</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
-  <div id="pagination">
-    <button onclick="prevPage()">« Önceki</button>
-    <span id="pageInfo">Sayfa 1</span>
-    <button onclick="nextPage()">Sonraki »</button>
+    <table id="logTable">
+      <thead>
+        <tr>
+          <th>ID</th><th>Zaman</th><th>Kaynak</th><th>Seviye</th><th>Mesaj</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
   </div>
 
   <script>
-    // 🔗 Otomatik ortam algılama
     const BASE_URL = window.location.origin.includes("127.0.0.1") || window.location.origin.includes("localhost")
       ? "http://127.0.0.1:8000"
       : "https://log-monitoring-dashboard.onrender.com";
 
     let chart, timeChart, pieChart;
-    let timeData = [], countData = [];
     let allLogs = [];
-    let currentPage = 1;
-    const rowsPerPage = 10;
-    let currentFilter = "ALL";
-
-    function applyFilter(log) {
-      if (currentFilter === "ALL") return true;
-      return log.level.toUpperCase() === currentFilter;
-    }
-
-    function setFilter(level) {
-      currentFilter = level;
-      currentPage = 1;
-      renderTablePage();
-      updateAllCharts();
-    }
-
-    function updateAllCharts() {
-      const filtered = allLogs.filter(applyFilter);
-      updateChart(filtered);
-      updateTimeSeries(filtered);
-      updatePieChart(filtered);
-      checkAlerts(filtered);
-    }
-
-    function updateChart(data) {
-      const counts = { INFO: 0, WARNING: 0, ERROR: 0 };
-      for (const log of data) counts[log.level] = (counts[log.level] || 0) + 1;
-      const ctx = document.getElementById('logChart').getContext('2d');
-      const chartData = {
-        labels: Object.keys(counts),
-        datasets: [{ label: 'Log Sayısı', data: Object.values(counts), backgroundColor: ['green', 'orange', 'red'] }]
-      };
-      if (chart) chart.data = chartData, chart.update();
-      else chart = new Chart(ctx, { type: 'bar', data: chartData, options: { responsive: true, plugins: { legend: { display: false } } } });
-    }
-
-    function updateTimeSeries(data) {
-      const now = new Date();
-      timeData.push(now.toLocaleTimeString());
-      countData.push(data.length);
-      if (timeData.length > 10) { timeData.shift(); countData.shift(); }
-      const ctx = document.getElementById('timeChart').getContext('2d');
-      const chartData = {
-        labels: timeData,
-        datasets: [{ label: 'Log Sayısı (Son sorguda)', data: countData, borderColor: '#0078d7', backgroundColor: 'rgba(0,120,215,0.2)', tension: 0.3, fill: true }]
-      };
-      if (timeChart) timeChart.data = chartData, timeChart.update();
-      else timeChart = new Chart(ctx, { type: 'line', data: chartData, options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } } });
-    }
-
-    function updatePieChart(data) {
-      const counts = { INFO: 0, WARNING: 0, ERROR: 0 };
-      for (const log of data) counts[log.level] = (counts[log.level] || 0) + 1;
-      const ctx = document.getElementById('pieChart').getContext('2d');
-      const chartData = {
-        labels: Object.keys(counts),
-        datasets: [{ data: Object.values(counts), backgroundColor: ['green', 'orange', 'red'] }]
-      };
-      if (pieChart) pieChart.data = chartData, pieChart.update();
-      else pieChart = new Chart(ctx, { type: 'pie', data: chartData, options: { responsive: true, plugins: { legend: { position: 'bottom' } } } });
-    }
-
-    function checkAlerts(data) {
-      const now = new Date();
-      const oneMinuteAgo = new Date(now.getTime() - 60000);
-      const errorLogs = data.filter(l => new Date(l.ts) >= oneMinuteAgo && l.level === "ERROR");
-      const alertBox = document.getElementById("alertBox");
-      if (errorLogs.length >= 3) {
-        alertBox.style.display = "block";
-        alertBox.textContent = `⚠️ Uyarı: Son 60 saniyede ${errorLogs.length} ERROR logu tespit edildi!`;
-        fetch(`${BASE_URL}/send-alert`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: alertBox.textContent })
-        });
-      } else alertBox.style.display = "none";
-    }
-
-    function renderTablePage() {
-      const tbody = document.querySelector('#logTable tbody');
-      tbody.innerHTML = '';
-      const filtered = allLogs.filter(applyFilter);
-      const start = (currentPage - 1) * rowsPerPage;
-      const end = start + rowsPerPage;
-      for (const log of filtered.slice(start, end)) {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${log.id}</td><td>${log.ts}</td><td>${log.source}</td><td class="${log.level.toLowerCase()}">${log.level}</td><td>${log.message}</td>`;
-        tbody.appendChild(tr);
-      }
-      document.getElementById("pageInfo").textContent = `Sayfa ${currentPage} / ${Math.ceil(filtered.length / rowsPerPage)}`;
-    }
-
-    function nextPage() {
-      const filtered = allLogs.filter(applyFilter);
-      if (currentPage < Math.ceil(filtered.length / rowsPerPage)) currentPage++, renderTablePage();
-    }
-    function prevPage() { if (currentPage > 1) currentPage--, renderTablePage(); }
+    let refreshInterval = 10000;  // default 10 saniye
+    let threshold = 3;
 
     async function loadLogs() {
-      const q = document.getElementById('search').value;
-      let url = `${BASE_URL}/recent?limit=200`;
-      if (q) url = `${BASE_URL}/search?q=${encodeURIComponent(q)}&limit=200`;
-      const response = await fetch(url);
+      const response = await fetch(`${BASE_URL}/recent?limit=200`);
       allLogs = await response.json();
-      renderTablePage();
-      updateAllCharts();
+      renderTable();
+      updateCharts(allLogs);
     }
 
-    loadLogs();
-    setInterval(loadLogs, 10000);
+    function renderTable() {
+      const tbody = document.querySelector('#logTable tbody');
+      tbody.innerHTML = '';
+      for (const log of allLogs) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${log.id}</td><td>${log.ts}</td><td>${log.source}</td><td>${log.level}</td><td>${log.message}</td>`;
+        tbody.appendChild(tr);
+      }
+    }
+
+    function updateCharts(data) {
+      const counts = { INFO: 0, WARNING: 0, ERROR: 0 };
+      data.forEach(l => counts[l.level] = (counts[l.level] || 0) + 1);
+      const ctx1 = document.getElementById('logChart').getContext('2d');
+      if (!chart)
+        chart = new Chart(ctx1, { type: 'bar', data: { labels: Object.keys(counts), datasets: [{ data: Object.values(counts), backgroundColor: ['green','orange','red'] }] } });
+      else { chart.data.datasets[0].data = Object.values(counts); chart.update(); }
+
+      const ctx3 = document.getElementById('pieChart').getContext('2d');
+      if (!pieChart)
+        pieChart = new Chart(ctx3, { type: 'pie', data: { labels: Object.keys(counts), datasets: [{ data: Object.values(counts), backgroundColor: ['green','orange','red'] }] } });
+      else { pieChart.data.datasets[0].data = Object.values(counts); pieChart.update(); }
+    }
+
+    function showSection(section) {
+      const dashboard = document.getElementById('dashboardSection');
+      const settings = document.getElementById('settingsPanel');
+      const navDashboard = document.getElementById('navDashboard');
+      const navSettings = document.getElementById('navSettings');
+
+      if (section === 'settings') {
+        settings.style.display = 'block';
+        dashboard.style.display = 'none';
+        navSettings.classList.add('active');
+        navDashboard.classList.remove('active');
+      } else {
+        settings.style.display = 'none';
+        dashboard.style.display = 'block';
+        navDashboard.classList.add('active');
+        navSettings.classList.remove('active');
+      }
+    }
+
+    function saveSettings() {
+      threshold = parseInt(document.getElementById('errorThreshold').value);
+      refreshInterval = parseInt(document.getElementById('refreshInterval').value) * 1000;
+      alert("✅ Ayarlar kaydedildi!");
+      clearInterval(autoRefresh);
+      autoRefresh = setInterval(loadLogs, refreshInterval);
+    }
 
     const themeBtn = document.getElementById("themeToggle");
     themeBtn.addEventListener("click", () => {
       document.body.classList.toggle("dark");
-      themeBtn.textContent = document.body.classList.contains("dark") ? "☀️ Light Mode" : "🌙 Dark Mode";
+      themeBtn.textContent = document.body.classList.contains("dark") ? "☀️ Tema" : "🌙 Tema";
     });
+
+    loadLogs();
+    let autoRefresh = setInterval(loadLogs, refreshInterval);
   </script>
 </body>
 </html>
+
 
